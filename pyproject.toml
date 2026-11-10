@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "balanced-moderation"
+version = "0.1.0"
+description = "Balanced moderation analysis: balanced group average treatment effects (BGATE) with double/debiased machine learning."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+authors = [{ name = "Nora Bearth" }]
+maintainers = [{ name = "Nora Bearth" }]
+keywords = [
+    "causal inference",
+    "causal machine learning",
+    "double machine learning",
+    "treatment effect heterogeneity",
+    "moderation analysis",
+    "BGATE",
+    "GATE",
+    "econometrics",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+    "numpy>=1.23",
+    "pandas>=1.5",
+    "scikit-learn>=1.2",
+    "scipy>=1.9",
+    "venn-abers>=1.4",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "build", "twine"]
+
+[project.urls]
+Homepage = "https://github.com/NoraBearth/balanced-moderation"
+Issues = "https://github.com/NoraBearth/balanced-moderation/issues"
+Paper = "https://arxiv.org/abs/2401.08290"
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "README.md", "LICENSE", "CHANGELOG.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
