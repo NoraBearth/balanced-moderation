@@ -23,23 +23,26 @@ def linear_bgate(**kwargs):
 # Reference values computed with the original replication code
 # (github.com/NoraBearth/Causal-Machine-Learning-for-Moderation-Effects,
 # estimators.estimate_effect, seed 7, 3 folds), see tools/compare_with_original.py.
+# The logistic regression is solved to a tight tolerance so that results do not
+# depend on the scikit-learn version.
 REFERENCE = [
     # balance, normalize_weights, estimate, variance
-    (None, True, 0.549662, 2.13e-02),
-    (["x5"], False, 0.340614, 2.47e-02),
-    (["x5"], True, 0.340357, 2.55e-02),
-    (["x0", "x1", "x5"], False, 0.836640, 1.79e-02),
-    (["x0", "x1", "x5"], True, 0.834047, 2.14e-02),
+    (None, True, 0.54960490, 2.134143e-02),
+    (["x5"], False, 0.34060651, 2.473072e-02),
+    (["x5"], True, 0.34035122, 2.550310e-02),
+    (["x0", "x1", "x5"], False, 0.83683544, 1.789335e-02),
+    (["x0", "x1", "x5"], True, 0.83423665, 2.140524e-02),
 ]
 
 
 @pytest.mark.parametrize("balance,normalize,estimate,variance", REFERENCE)
 def test_matches_original_replication_code(df, balance, normalize, estimate, variance):
-    res = linear_bgate(n_folds=3, normalize_weights=normalize, calibration=None,
-                       random_state=7).fit(
+    res = BGATE(LinearRegression(), LogisticRegression(max_iter=10000, tol=1e-12),
+                n_folds=3, normalize_weights=normalize, calibration=None,
+                random_state=7).fit(
         df, "y", "d", "z", X, balance=balance)
-    assert res.effect == pytest.approx(estimate, abs=5e-6)
-    assert res.variances[2] == pytest.approx(variance, rel=5e-3)
+    assert res.effect == pytest.approx(estimate, abs=1e-6)
+    assert res.variances[2] == pytest.approx(variance, rel=1e-5)
 
 
 def test_result_structure(df):

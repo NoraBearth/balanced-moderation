@@ -22,7 +22,7 @@ from balanced_moderation import BGATE, make_moderation_data  # noqa: E402
 
 SEED, N, P = 7, 1500, 10
 models = {
-    "linear": (LinearRegression(), LogisticRegression(max_iter=1000)),
+    "linear": (LinearRegression(), LogisticRegression(max_iter=10000, tol=1e-12)),
     "forest": (RandomForestRegressor(n_estimators=100, min_samples_leaf=5, random_state=0),
                RandomForestClassifier(n_estimators=100, min_samples_leaf=5, random_state=0)),
 }
