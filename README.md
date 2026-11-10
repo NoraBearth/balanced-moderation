@@ -50,7 +50,6 @@ controls = [f"x{j}" for j in range(10)]
 model = BGATE(
     outcome_model=RandomForestRegressor(n_estimators=300, min_samples_leaf=5, random_state=0),
     propensity_model=RandomForestClassifier(n_estimators=300, min_samples_leaf=5, random_state=0),
-    n_folds=5,
     random_state=42,
 )
 
@@ -60,26 +59,28 @@ result = model.fit(
     d="d",              # binary treatment
     z="z",              # binary moderator
     x=controls,         # control variables (confounders)
-    balance=controls,   # balancing variables W (a subset of x)
+    balance=["x5"],     # balancing variables W (a subset of x)
 )
 print(result.summary())
 ```
 
 ```
-=============================================================================
-Balanced GATE (BGATE) - balanced over: x0, x1, x2, x3, x4, x5, x6, x7, x8, x9
+========================================================================
+Balanced GATE (BGATE) - balanced over: x5
 Moderator: z    Observations: 4000
-=============================================================================
+========================================================================
             estimate  std_err  t_stat  p_value  ci_95_lower  ci_95_upper
-BGATE(z=1)    1.4175   0.0944 15.0143   0.0000       1.2325       1.6026
-BGATE(z=0)    1.0389   0.0584 17.7982   0.0000       0.9245       1.1533
-Difference    0.3786   0.1116  3.3932   0.0007       0.1599       0.5973
-=============================================================================
+BGATE(z=1)    1.2713   0.0815 15.5959   0.0000       1.1115       1.4310
+BGATE(z=0)    1.1781   0.0529 22.2881   0.0000       1.0745       1.2817
+Difference    0.0931   0.0970  0.9607   0.3367      -0.0969       0.2832
+========================================================================
 ```
 
-In this simulated design the true BGATE difference is 0.484 and the true GATE
-difference is 0.414: because the moderator also shifts the distribution of
-`x5`, the two parameters differ.
+In this simulated design the moderator `z` also shifts the distribution of
+`x5`. The true GATE difference is 0.414, but once `x5` is balanced, the true
+BGATE difference is only 0.276: part of the GATE difference is due to the
+different `x5` distributions, not to `z` itself. (Both 95% confidence
+intervals from this one simulated sample contain the true values.)
 
 Leave out `balance=` to estimate the GATE difference instead. A complete
 example is in [`examples/quickstart.py`](examples/quickstart.py).
@@ -103,7 +104,7 @@ example is in [`examples/quickstart.py`](examples/quickstart.py).
 | `propensity_model` | random forest | any scikit-learn classifier with `predict_proba`, for P(D=1 \| X) |
 | `effect_model` | = `outcome_model` | BGATE only: regressor for E[τ \| W, Z=z] |
 | `moderator_model` | = `propensity_model` | BGATE only: classifier for P(Z=1 \| W) |
-| `n_folds` | 5 | cross-fitting folds |
+| `n_folds` | 2 | cross-fitting folds |
 | `n_folds_second` | = `n_folds` | BGATE only: folds of the second cross-fitting step |
 | `calibration` | `"venn_abers"` | propensity score calibration: `"venn_abers"`, `"platt"`, `"beta"`, `"isotonic"` or `None` |
 | `normalize_weights` | `True` | BGATE only: normalise the second-step weights to mean one |
@@ -146,7 +147,17 @@ balancing variables W separately for Z=1 and Z=0, estimate P(Z=1 | W), and
 combine them into doubly robust scores for BGATE(1) and BGATE(0).
 
 Estimates are the means of these scores, and standard errors come from their
-variance. See Bearth & Lechner (2024) for the theory, including conditions for
+variance.
+
+**Sample size and balancing variables.** The second step only uses the
+observations of one first-step fold, split again by the moderator. With K
+folds in each step, each second-step model is trained on roughly
+(1/K)·(1 − 1/K) of the sample, before splitting by Z: a quarter of the sample
+with the default of 2 × 2 folds. Balancing on one or a few variables works
+well in moderate samples (Bearth & Lechner, 2024, find good coverage from
+N ≈ 1,250 with one balancing variable). Balancing on many variables at once
+makes the second-step regressions harder and needs larger samples; more
+folds make this worse. See Bearth & Lechner (2024) for the theory, including conditions for
 √N-consistency and asymptotic normality.
 
 Current limitations: the treatment D and the moderator Z must be binary.

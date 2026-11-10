@@ -44,11 +44,15 @@ class BGATE:
     moderator_model : scikit-learn classifier, optional
         BGATE only: model for P(Z=1 | W). Default: same as
         ``propensity_model``.
-    n_folds : int, default 5
-        Number of cross-fitting folds.
+    n_folds : int, default 2
+        Number of cross-fitting folds (2, as in the simulation study of
+        Bearth & Lechner, 2024).
     n_folds_second : int, optional
         BGATE only: number of folds of the second cross-fitting step, which
         is carried out within each first-step fold. Default: ``n_folds``.
+        Because the second step only uses the observations of one first-step
+        fold, more folds leave less data for the second-step models; with
+        many balancing variables this requires a large sample.
     calibration : {"venn_abers", "platt", "beta", "isotonic"} or None, default "venn_abers"
         Calibrate the estimated propensity scores P(D=1 | X) and P(Z=1 | W)
         with the cross-fitted procedure of Ballinari & Bearth (2024). Within
@@ -89,7 +93,7 @@ class BGATE:
         propensity_model=None,
         effect_model=None,
         moderator_model=None,
-        n_folds: int = 5,
+        n_folds: int = 2,
         n_folds_second: int | None = None,
         calibration: str | None = "venn_abers",
         calibration_splits: int = 2,

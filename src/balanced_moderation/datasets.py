@@ -97,11 +97,23 @@ def true_moderation_effects(
     """Approximate the true GATE and BGATE differences by Monte Carlo.
 
     Returns a dict with ``"GATE"`` (no balancing) and ``"BGATE_all"`` (balanced
-    over all covariates ``x0, ..., x{p-1}``).
+    over all covariates ``x0, ..., x{p-1}``). For ``design="z_affects_x"``,
+    where ``x5`` is binary, it also returns ``"BGATE_x5"`` (balanced over
+    ``x5`` only).
     """
     rng = check_random_state(random_state)
     _, _, Z, X, tau1, tau0 = _simulate(n_draws, p, design, rng)
-    return {
+    truth = {
         "GATE": float(tau1[Z == 1].mean() - tau0[Z == 0].mean()),
         "BGATE_all": float(tau1.mean() - tau0.mean()),
     }
+    if design == "z_affects_x":
+        # BGATE(z) = sum_v P(x5 = v) * E[tau_z | Z = z, x5 = v]
+        x5 = X[:, 5]
+        bgate = {z: 0.0 for z in (0, 1)}
+        for v in (0.0, 1.0):
+            share = np.mean(x5 == v)
+            bgate[1] += share * tau1[(Z == 1) & (x5 == v)].mean()
+            bgate[0] += share * tau0[(Z == 0) & (x5 == v)].mean()
+        truth["BGATE_x5"] = float(bgate[1] - bgate[0])
+    return truth

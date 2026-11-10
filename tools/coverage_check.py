@@ -17,7 +17,7 @@ for rep in range(REPS):
     model = BGATE(R(200, min_samples_leaf=5, random_state=rep, n_jobs=-1),
                   C(200, min_samples_leaf=5, random_state=rep, n_jobs=-1),
                   random_state=rep)
-    for key, balance in [("GATE", None), ("BGATE_all", X)]:
+    for key, balance in [("GATE", None), ("BGATE_x5", ["x5"])]:
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             res = model.fit(df, "y", "d", "z", X, balance=balance)
